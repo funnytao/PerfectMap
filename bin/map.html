@@ -1,0 +1,301 @@
+<html>
+<head>
+<script src="https://maps.googleapis.com/maps/api/js?sensor=false"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+<script>
+
+var image = 'fallout.png';
+var mouseDownPos, mouseUpPos, shiftPressed, map;
+var markers = [];
+
+function updateMarkerPosition(latLng) {
+  if(shiftPressed){
+    document.getElementById('dragInfo').innerHTML = [
+    mouseDownPos.lat(),
+    mouseDownPos.lng(),
+    mouseUpPos.lat(),
+    mouseUpPos.lng()
+    ].join('</br>');
+    document.getElementById('clickInfo').innerHTML = "";  
+  }
+  else{
+    document.getElementById('clickInfo').innerHTML = [
+    latLng.lat(),
+    latLng.lng()
+    ].join('</br>');
+    document.getElementById('dragInfo').innerHTML = "";
+  }
+}
+
+function updateRunInfo(flag) {
+  if (flag==1) document.getElementById('runInfo').innerHTML = ["Wasteland Map Loaded!"];
+  else if (flag==2) document.getElementById('runInfo').innerHTML = ["Found!"];
+  else if (flag==3) document.getElementById('runInfo').innerHTML = ["Cleared!"];
+  else if (flag==4) document.getElementById('runInfo').innerHTML = [""];
+}
+
+function loadmap(){
+  var tmp = window.document.knn.loadMap();
+  alert(tmp);
+  updateRunInfo(1);
+  setTimeout(function(){ updateRunInfo(4) }, 3000); 
+}
+
+function search(){
+  //var a = <%=knn(latLng.lat(),latLng.lng())%>
+  //alert(a); 
+  
+  var s = document.getElementById('clickInfo').innerHTML;
+  var arr = s.split('<br>');
+  var a = window.document.knn.knn(arr[0],arr[1]);
+  //alert(a);
+  var points = a.split('//');
+  alert("1");
+		for(var i=0; i<points.length; i++){
+			var pos = points[i].split(',');
+			var newPos = new google.maps.LatLng(pos[0], pos[1]);
+			var content = "State: "+pos[2].toString()+"; City: "+pos[3].toString()+"; Distance: "+pos[4].split('.')[0].toString()+"km";
+      var marker = new google.maps.Marker({position: newPos, map: map, icon: image});
+      markers.push(marker);
+      var infowindow = new google.maps.InfoWindow();
+      google.maps.event.addListener(marker,'click', (function(marker,content,infowindow){ 
+          return function() {
+              updateMarkerPosition(marker.getPosition());
+              infowindow.setContent(content);
+              infowindow.open(map,marker);
+          };
+      })(marker,content,infowindow)); 
+		}
+  
+	//var a = window.document.knn.print("1234");
+}
+
+function clearMarkers(){
+	//alert("enter");
+	for(var i = 0; i<markers.length; i++){
+		markers[i].setMap(null);
+	}
+}
+
+function showMarker() {
+  var lat1 = document.getElementById('fname').value;
+  var lng1 = document.getElementById('lname').value;
+  var newPos = new google.maps.LatLng(lat1, lng1);
+  var marker = new google.maps.Marker({position: newPos, map: map, icon: image});
+  markers.push(marker);
+  map.setCenter(marker.getPosition());
+}
+
+$(document).ready(function () {
+
+  var latLng = new google.maps.LatLng(42.349, -71.106);
+  map = new google.maps.Map(document.getElementById('mapCanvas'), {
+    zoom: 8,
+    center: latLng,
+    mapTypeId: google.maps.MapTypeId.ROADMAP,
+    disableDoubleClickZoom: true
+  });
+  var marker = new google.maps.Marker({
+    position: latLng,
+    icon: image,
+    map: map,
+    draggable: false,
+  });
+  markers.push(marker);
+  updateMarkerPosition(latLng);
+
+  shiftPressed = false;
+
+  $(window).keydown(function (evt) {
+      if (evt.which === 16) { // shift
+          shiftPressed = true;
+      }
+  }).keyup(function (evt) {
+      if (evt.which === 16) { // shift
+          shiftPressed = false;
+      }
+  });
+
+  var  gribBoundingBox = null,
+      mouseIsDown = 0;
+
+	  // document.getElementById('fileinput').addEventListener('change', readSingleFile, false);
+
+  google.maps.event.addListener(map, 'dblclick', function(event) {
+    //marker.setMap(null);
+    var marker = new google.maps.Marker({position: event.latLng, map: map, icon: image});
+	markers.push(marker);
+    updateMarkerPosition(marker.getPosition());
+  });
+
+  google.maps.event.addListener(map, 'mousedown', function(event) {
+    if (!shiftPressed) {
+      if (gribBoundingBox!=null) {
+        gribBoundingBox.setMap(null);
+        gribBoundingBox = null;
+      }
+    }
+    else {
+      //marker.setMap(null);
+      mouseIsDown = 1;
+      mouseDownPos = event.latLng;
+      map.setOptions({
+          draggable: false
+      });
+    }
+  });
+
+  google.maps.event.addListener(map, 'mousemove', function (event) {
+    if (mouseIsDown && (shiftPressed|| gribBoundingBox != null) ) {
+      if (gribBoundingBox != null) {         
+          var newbounds = new google.maps.LatLngBounds(mouseDownPos,null);
+          newbounds.extend(event.latLng);    
+          gribBoundingBox.setBounds(newbounds); 
+      } 
+      else {
+        gribBoundingBox = new google.maps.Rectangle({
+            map: map,
+            bounds: null,
+            //editable: true,
+            //draggable: true,
+            fillOpacity: 0.15,
+            strokeWeight: 0.9,
+            clickable: false
+        });
+      }
+    }
+  });
+
+  google.maps.event.addListener(map, 'mouseup', function (event) {
+      if (mouseIsDown && (shiftPressed|| gribBoundingBox != null)) {
+          mouseIsDown = 0;
+          //gribBoundingBox = null;
+          mouseUpPos = event.latLng;
+        updateMarkerPosition();  
+          var s = document.getElementById('dragInfo').innerHTML;
+          var arr = s.split('<br>');
+          var a = window.document.knn.range(arr[0],arr[1],arr[2],arr[3]);
+          //alert(a);
+          var points = a.split('//');
+            for(var i=0; i<points.length; i++){
+              var pos = points[i].split(',');
+              var newPos = new google.maps.LatLng(pos[0], pos[1]);
+              var content = "State: "+pos[2].toString()+"; City: "+pos[3].toString();
+              var marker = new google.maps.Marker({position: newPos, map: map, icon: image});
+              markers.push(marker);
+              var infowindow = new google.maps.InfoWindow();
+              google.maps.event.addListener(marker,'click', (function(marker,content,infowindow){ 
+                  return function() {
+                      updateMarkerPosition(marker.getPosition());
+                      infowindow.setContent(content);
+                      infowindow.open(map,marker);
+                  };
+              })(marker,content,infowindow)); 
+            }  
+      }
+
+      //gribBoundingBox.setMap(null);
+      map.setOptions({
+          draggable: true
+      });
+  });
+
+});
+
+</script>
+</head>
+<style>
+  #bg{
+    display:block;
+    float: left;
+    width: 1920px;
+    height: 1080px;
+    position: absolute;
+    z-index: -1;
+  }
+  #mapCanvas {
+    width: 750px;
+    height: 475px;
+    left: 417px;
+    top: 185px;
+    position: absolute;
+  }
+  #infoPanel {
+    color: rgb(87,253,97);
+    position: absolute;
+    left: 441px;
+    top: 675px;
+    width: 367px;
+    height: 95px;
+  }
+  #enterMarker {
+    position: absolute;
+    left: 829px;
+    top: 695px;
+    color: rgb(87,253,97);
+  }
+  #runInfo {
+    color: rgb(87,253,97);
+    position: absolute;
+    left: 441px;
+    top: 780px;
+  }
+  #showmarker {
+    position: absolute;
+    left: 1088px;
+    top: 685px;
+  }
+  #Loadmap {
+    position: absolute;
+    left: 1479px;
+    top: 247px;
+  }
+  #showknn {
+    position: absolute;
+    left: 1495px;
+    top: 293px;
+  }
+  #clearall {
+    position: absolute;
+    left: 1161px;
+    top: 991px;
+  }
+/*  .image-upload > input
+  {
+      display: none;
+  }*/
+/*  #infoPanel div {
+    margin-bottom: 5px;
+    top: 75px;
+  }*/
+  </style>
+<body>
+  <div>
+    <img src="pipboy.png" id="bg"/>
+  <div id="mapCanvas"></div>
+  <div id="infoPanel">
+    <b>Current position:</b>
+    <div id="clickInfo"></div>
+    <div id="dragInfo"></div>
+  </div>
+  <div id="runInfo"></div>
+  <div id="enterMarker">
+    Lat: <input type="text" id='fname' name="fname" STYLE="background-color:black; color: rgb(87,253,97);"><br>
+    <p></p>
+    Lng: <input type="text" id='lname' name="lname" STYLE="background-color:black; color: rgb(87,253,97);"><br>
+  </div>
+</div>
+<Applet code="mapapp.PowerMap.class" name="knn" width="0" height="0">
+</Applet>
+<img id="Loadmap" src="loadmap.png" onclick="loadmap();"/>
+<img id="showmarker" src="marker.png" onclick="showMarker();"/>
+<img id="clearall" src="clearall.png" onclick="clearMarkers();"/>
+<img id="showknn" src="showknn.png" onclick="search();"/>
+	<!-- <div class="image-upload">
+    <label for="fileinput">
+      <img id="loadmap" src="loadmap.png"/>
+    </label>
+    <input type="file" id="fileinput" />
+  </div> -->
+</body>
+</html>

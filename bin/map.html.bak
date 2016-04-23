@@ -1,0 +1,409 @@
+<html>
+<head>
+<script src="https://maps.googleapis.com/maps/api/js?sensor=false"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+<script>
+
+var image = 'fallout.png';
+var mouseDownPos, mouseUpPos, shiftPressed, map;
+var markers = [];
+
+function updateMarkerPosition(latLng) {
+  if(shiftPressed){
+    document.getElementById('dragInfo').innerHTML = [
+    mouseDownPos.lat(),
+    mouseDownPos.lng(),
+    mouseUpPos.lat(),
+    mouseUpPos.lng()
+    ].join('</br>');
+    document.getElementById('clickInfo').innerHTML = "";  
+  }
+  else{
+    document.getElementById('clickInfo').innerHTML = [
+    latLng.lat(),
+    latLng.lng()
+    ].join('</br>');
+    document.getElementById('dragInfo').innerHTML = "";
+  }
+}
+
+function updateRunInfo(flag) {
+  if (flag==1) document.getElementById('runInfo').innerHTML = ["Wasteland Map Loaded!"];
+  else if (flag==2) document.getElementById('runInfo').innerHTML = ["Found!"];
+  else if (flag==3) document.getElementById('runInfo').innerHTML = ["Cleared!"];
+  else if (flag==4) document.getElementById('runInfo').innerHTML = [""];
+}
+
+// function readSingleFile(evt) {
+//     //Retrieve the first (and only!) File from the FileList object
+//     var f = evt.target.files[0]; 
+
+//     if (f) {
+//       var r = new FileReader();
+//       var state1 = "";
+//       var city1 = "";
+//       var xpos1 = "";
+//       var ypos1 = "";
+// 	  var state2 = "";
+//       var city2 = "";
+//       var xpos2 = "";
+//       var ypos2 = "";
+// 	  var state3 = "";
+//       var city3 = "";
+//       var xpos3 = "";
+//       var ypos3 = "";
+// 	  var state4 = "";
+//       var city4 = "";
+//       var xpos4 = "";
+//       var ypos4 = "";
+// 	  var state5 = "";
+//       var city5 = "";
+//       var xpos5 = "";
+//       var ypos5 = "";
+//       var count1 = 0;
+// 	  var count2 = 0;
+// 	  var count3 = 0;
+// 	  var count4 = 0;
+// 	  var count5 = 0;
+//       r.onload = function(e) { 
+//         var contents = e.target.result.split('\n');
+
+//         for (var i=0; i<contents.length/5; i++) {
+//           var test = contents[i].split('\t');
+//           //var item = [test[2], test[3], test[2], test[3]];
+//           state1 += test[0] + ",";
+//           city1 += test[1] + ",";
+//           xpos1 += test[2] + ",";
+//           ypos1 += test[3].substring(0,test[3].length-1) + ",";
+		  
+//         }
+		
+// 		for (var i=contents.length/5; i<(contents.length/5)*2; i++) {
+//           var test = contents[i].split('\t');
+//           //var item = [test[2], test[3], test[2], test[3]];
+//           state2 += test[0] + ",";
+//           city2 += test[1] + ",";
+//           xpos2 += test[2] + ",";
+//           ypos2 += test[3].substring(0,test[3].length-1) + ",";
+// 		 count2++;
+//         }
+		
+// 		for (var i=(contents.length/5)*2; i<(contents.length/5)*3; i++) {
+//           var test = contents[i].split('\t');
+//          // var item = [test[2], test[3], test[2], test[3]];
+//           state3 += test[0] + ",";
+//           city3 += test[1] + ",";
+//           xpos3 += test[2] + ",";
+//           ypos3 += test[3].substring(0,test[3].length-1) + ",";
+		 
+//         }
+// 		for (var i=(contents.length/5)*3; i<(contents.length/5)*4; i++) {
+//           var test = contents[i].split('\t');
+//           //var item = [test[2], test[3], test[2], test[3]];
+//           state4 += test[0] + ",";
+//           city4 += test[1] + ",";
+//           xpos4 += test[2] + ",";
+//           ypos4 += test[3].substring(0,test[3].length-1) + ",";
+		  
+//         }
+// 		for (var i=(contents.length/5)*4; i<contents.length; i++) {
+//           var test = contents[i].split('\t');
+//          // var item = [test[2], test[3], test[2], test[3]];
+//           state5 += test[0] + ",";
+//           city5 += test[1] + ",";
+//           xpos5 += test[2] + ",";
+//           ypos5 += test[3].substring(0,test[3].length-1) + ",";
+		 
+//         }
+		
+// 		//alert(xpos);
+// 		//alert(count2);
+// 		//var a = //window.document.knn.initialize(state1,city1,xpos1,ypos1,state2,city2,xpos2,ypos2,state3,city3,xpos3,ypos3,state4,city4,xpos4,ypos4,state5,city5,xpos5,ypos5);
+		
+// 		var a1 = window.document.knn.initialize(state1,city1,xpos1,ypos1);
+// 		var a2 = window.document.knn.initialize(state2,city2,xpos2,ypos2);
+// 		var a3 = window.document.knn.initialize(state3,city3,xpos3,ypos3);
+// 		var a4 = window.document.knn.initialize(state4,city4,xpos4,ypos4);
+// 		var a5 = window.document.knn.initialize(state5,city5,xpos5,ypos5);
+//         //alert("enter");
+//     //    alert(a1);
+// 	   // alert(a2);
+// 	   // alert(a3);
+// 	   // alert(a4);
+// 	   // alert(a5);
+// 	   updateRunInfo(1);
+//      setTimeout(function(){ updateRunInfo(4) }, 3000);
+// //var a1 = window.document.knn.print("1.1","1.2");
+// //var a1 = window.document.knn.initialize(state1,city1,xpos1,ypos1);
+// //alert(a1);
+//       }
+//       r.readAsText(f);
+//     } else { 
+//       alert("Failed to load file");
+//     }
+//   }
+
+function loadmap(){
+  var tmp = window.document.knn.loadMap();
+  updateRunInfo(1);
+  setTimeout(function(){ updateRunInfo(4) }, 3000);
+}
+
+function search(){
+  //var a = <%=knn(latLng.lat(),latLng.lng())%>
+  //alert(a); 
+  
+  var s = document.getElementById('clickInfo').innerHTML;
+  var arr = s.split('<br>');
+  var a = window.document.knn.knn(arr[0],arr[1]);
+  //alert(a);
+  var points = a.split('//');
+  alert("1");
+		for(var i=0; i<points.length; i++){
+			var pos = points[i].split(',');
+			var newPos = new google.maps.LatLng(pos[0], pos[1]);
+			var content = "State: "+pos[2].toString()+"; City: "+pos[3].toString()+"; Distance: "+pos[4].split('.')[0].toString()+"km";
+      var marker = new google.maps.Marker({position: newPos, map: map, icon: image});
+      markers.push(marker);
+      var infowindow = new google.maps.InfoWindow();
+      google.maps.event.addListener(marker,'click', (function(marker,content,infowindow){ 
+          return function() {
+              updateMarkerPosition(marker.getPosition());
+              infowindow.setContent(content);
+              infowindow.open(map,marker);
+          };
+      })(marker,content,infowindow)); 
+		}
+  
+	//var a = window.document.knn.print("1234");
+}
+
+function clearMarkers(){
+	//alert("enter");
+	for(var i = 0; i<markers.length; i++){
+		markers[i].setMap(null);
+	}
+}
+
+function showMarker() {
+  var lat1 = document.getElementById('fname').value;
+  var lng1 = document.getElementById('lname').value;
+  var newPos = new google.maps.LatLng(lat1, lng1);
+  var marker = new google.maps.Marker({position: newPos, map: map, icon: image});
+  markers.push(marker);
+  map.setCenter(marker.getPosition());
+}
+
+$(document).ready(function () {
+
+  var latLng = new google.maps.LatLng(42.349, -71.106);
+  map = new google.maps.Map(document.getElementById('mapCanvas'), {
+    zoom: 8,
+    center: latLng,
+    mapTypeId: google.maps.MapTypeId.ROADMAP,
+    disableDoubleClickZoom: true
+  });
+  var marker = new google.maps.Marker({
+    position: latLng,
+    icon: image,
+    map: map,
+    draggable: false,
+  });
+  markers.push(marker);
+  updateMarkerPosition(latLng);
+
+  shiftPressed = false;
+
+  $(window).keydown(function (evt) {
+      if (evt.which === 16) { // shift
+          shiftPressed = true;
+      }
+  }).keyup(function (evt) {
+      if (evt.which === 16) { // shift
+          shiftPressed = false;
+      }
+  });
+
+  var  gribBoundingBox = null,
+      mouseIsDown = 0;
+
+	  // document.getElementById('fileinput').addEventListener('change', readSingleFile, false);
+
+  google.maps.event.addListener(map, 'dblclick', function(event) {
+    //marker.setMap(null);
+    var marker = new google.maps.Marker({position: event.latLng, map: map, icon: image});
+	markers.push(marker);
+    updateMarkerPosition(marker.getPosition());
+  });
+
+  google.maps.event.addListener(map, 'mousedown', function(event) {
+    if (!shiftPressed) {
+      if (gribBoundingBox!=null) {
+        gribBoundingBox.setMap(null);
+        gribBoundingBox = null;
+      }
+    }
+    else {
+      //marker.setMap(null);
+      mouseIsDown = 1;
+      mouseDownPos = event.latLng;
+      map.setOptions({
+          draggable: false
+      });
+    }
+  });
+
+  google.maps.event.addListener(map, 'mousemove', function (event) {
+    if (mouseIsDown && (shiftPressed|| gribBoundingBox != null) ) {
+      if (gribBoundingBox != null) {         
+          var newbounds = new google.maps.LatLngBounds(mouseDownPos,null);
+          newbounds.extend(event.latLng);    
+          gribBoundingBox.setBounds(newbounds); 
+      } 
+      else {
+        gribBoundingBox = new google.maps.Rectangle({
+            map: map,
+            bounds: null,
+            //editable: true,
+            //draggable: true,
+            fillOpacity: 0.15,
+            strokeWeight: 0.9,
+            clickable: false
+        });
+      }
+    }
+  });
+
+  google.maps.event.addListener(map, 'mouseup', function (event) {
+      if (mouseIsDown && (shiftPressed|| gribBoundingBox != null)) {
+          mouseIsDown = 0;
+          //gribBoundingBox = null;
+          mouseUpPos = event.latLng;
+        updateMarkerPosition();  
+          var s = document.getElementById('dragInfo').innerHTML;
+          var arr = s.split('<br>');
+          var a = window.document.knn.range(arr[0],arr[1],arr[2],arr[3]);
+          //alert(a);
+          var points = a.split('//');
+            for(var i=0; i<points.length; i++){
+              var pos = points[i].split(',');
+              var newPos = new google.maps.LatLng(pos[0], pos[1]);
+              var content = "State: "+pos[2].toString()+"; City: "+pos[3].toString();
+              var marker = new google.maps.Marker({position: newPos, map: map, icon: image});
+              markers.push(marker);
+              var infowindow = new google.maps.InfoWindow();
+              google.maps.event.addListener(marker,'click', (function(marker,content,infowindow){ 
+                  return function() {
+                      updateMarkerPosition(marker.getPosition());
+                      infowindow.setContent(content);
+                      infowindow.open(map,marker);
+                  };
+              })(marker,content,infowindow)); 
+            }  
+      }
+
+      //gribBoundingBox.setMap(null);
+      map.setOptions({
+          draggable: true
+      });
+  });
+
+});
+
+</script>
+</head>
+<style>
+  #bg{
+    display:block;
+    float: left;
+    width: 1920px;
+    height: 1080px;
+    position: absolute;
+    z-index: -1;
+  }
+  #mapCanvas {
+    width: 750px;
+    height: 475px;
+    left: 417px;
+    top: 185px;
+    position: absolute;
+  }
+  #infoPanel {
+    color: rgb(87,253,97);
+    position: absolute;
+    left: 441px;
+    top: 675px;
+    width: 367px;
+    height: 95px;
+  }
+  #enterMarker {
+    position: absolute;
+    left: 829px;
+    top: 695px;
+    color: rgb(87,253,97);
+  }
+  #runInfo {
+    color: rgb(87,253,97);
+    position: absolute;
+    left: 441px;
+    top: 780px;
+  }
+  #showmarker {
+    position: absolute;
+    left: 1088px;
+    top: 685px;
+  }
+  #Loadmap {
+    position: absolute;
+    left: 1479px;
+    top: 247px;
+  }
+  #showknn {
+    position: absolute;
+    left: 1495px;
+    top: 293px;
+  }
+  #clearall {
+    position: absolute;
+    left: 1161px;
+    top: 991px;
+  }
+/*  .image-upload > input
+  {
+      display: none;
+  }*/
+/*  #infoPanel div {
+    margin-bottom: 5px;
+    top: 75px;
+  }*/
+  </style>
+<body>
+  <div>
+    <img src="pipboy.png" id="bg"/>
+  <div id="mapCanvas"></div>
+  <div id="infoPanel">
+    <b>Current position:</b>
+    <div id="clickInfo"></div>
+    <div id="dragInfo"></div>
+  </div>
+  <div id="runInfo"></div>
+  <div id="enterMarker">
+    Lat: <input type="text" id='fname' name="fname" STYLE="background-color:black; color: rgb(87,253,97);"><br>
+    <p></p>
+    Lng: <input type="text" id='lname' name="lname" STYLE="background-color:black; color: rgb(87,253,97);"><br>
+  </div>
+</div>
+<Applet code="mapapp.PowerMap.class" name="knn" width="0" height="0">
+</Applet>
+<img id="Loadmap" src="loadmap.png" onclick="loadmap();"/>
+<img id="showmarker" src="marker.png" onclick="showMarker();"/>
+<img id="clearall" src="clearall.png" onclick="clearMarkers();"/>
+<img id="showknn" src="showknn.png" onclick="search();"/>
+	<!-- <div class="image-upload">
+    <label for="fileinput">
+      <img id="loadmap" src="loadmap.png"/>
+    </label>
+    <input type="file" id="fileinput" />
+  </div> -->
+</body>
+</html>
